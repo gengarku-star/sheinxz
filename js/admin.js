@@ -115,8 +115,8 @@ async function loadPages() {
         <input type="text" class="form-input page-title-input" value="${escapeHtml(page.title)}" />
       </div>
       <div class="form-group">
-        <label class="form-label">内容（纯文本，换行自动保留）</label>
-        <textarea class="form-textarea page-content-input" rows="6">${escapeHtml(page.content)}</textarea>
+        <label class="form-label">内容（支持 HTML 标签，如 &lt;h2&gt; &lt;p&gt; &lt;ul&gt; &lt;strong&gt; 等）</label>
+        <textarea class="form-textarea page-content-input" rows="16">${escapeHtml(page.content)}</textarea>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span class="card-meta">slug: ${escapeHtml(page.slug)} · 更新于 ${formatTime(page.updated_at)}</span>

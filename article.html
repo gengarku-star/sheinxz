@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>内容详情</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">MySite</a>
+      <div class="navbar-links">
+        <a href="index.html">首页</a>
+        <a href="article.html?slug=operations">运营机制</a>
+        <a href="article.html?slug=faq">常见问题</a>
+        <a href="article.html?slug=templates">内推模板</a>
+        <a href="resources.html">资源下载</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <article id="article-body">
+      <div class="loading">正在加载内容…</div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    &copy; 2026 MySite. All rights reserved.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const slug = new URLSearchParams(window.location.search).get('slug');
+      if (slug) loadArticle(slug);
+    });
+
+    async function loadArticle(slug) {
+      const container = document.getElementById('article-body');
+      const { data, error } = await supabase
+        .from('pages')
+        .select('title, content')
+        .eq('slug', slug)
+        .single();
+
+      if (error || !data) {
+        container.innerHTML = '<div class="empty-state"><p>页面不存在或加载失败</p></div>';
+        return;
+      }
+
+      document.title = data.title;
+      container.innerHTML = `<h1 class="page-title">${data.title}</h1><div class="article-content">${data.content}</div>`;
+    }
+  </script>
+</body>
+</html>
