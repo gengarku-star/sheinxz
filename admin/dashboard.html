@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理后台</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="../index.html" class="navbar-brand">MySite 管理后台</a>
+      <div class="navbar-links">
+        <span id="user-email" style="font-size:13px;color:var(--text-secondary);padding:6px 0;"></span>
+        <button id="logout-btn" class="btn btn-sm" style="margin-left:8px;">退出</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" id="admin-dashboard">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tab-content">内容管理</button>
+      <button class="tab-btn" data-tab="tab-files">文件管理</button>
+      <button class="tab-btn" data-tab="tab-messages">留言管理</button>
+    </div>
+
+    <!-- 内容管理 -->
+    <div id="tab-content" class="tab-panel active">
+      <p class="page-subtitle">编辑前台各页面的标题和正文内容</p>
+      <div id="pages-container">
+        <div class="loading">加载中…</div>
+      </div>
+    </div>
+
+    <!-- 文件管理 -->
+    <div id="tab-files" class="tab-panel">
+      <p class="page-subtitle">上传文件供访客下载</p>
+
+      <div class="card" style="margin-bottom:24px;">
+        <div id="upload-zone" class="file-upload-zone">
+          <p style="font-size:28px;margin-bottom:8px;">📁</p>
+          <p>点击或拖拽文件到此处</p>
+          <p style="font-size:12px;margin-top:4px;">支持任意格式，建议单文件不超过 50MB</p>
+        </div>
+        <input type="file" id="file-input" style="display:none;" />
+        <div class="form-group" style="margin-top:12px;">
+          <label class="form-label">文件说明（选填）</label>
+          <input type="text" id="file-description" class="form-input" placeholder="简要描述此文件" />
+        </div>
+        <button id="upload-btn" class="btn btn-primary" style="margin-top:4px;">上传文件</button>
+      </div>
+
+      <div id="files-container">
+        <div class="loading">加载中…</div>
+      </div>
+    </div>
+
+    <!-- 留言管理 -->
+    <div id="tab-messages" class="tab-panel">
+      <p class="page-subtitle">查看和删除访客留言</p>
+      <div id="messages-container" class="card">
+        <div class="loading">加载中…</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>

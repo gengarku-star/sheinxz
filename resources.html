@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>资源下载</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">MySite</a>
+      <div class="navbar-links">
+        <a href="index.html">首页</a>
+        <a href="resources.html" class="active">资源下载</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" id="page-resources">
+    <h1 class="page-title" id="page-title">加载中…</h1>
+    <div class="card" id="page-content" style="margin-bottom:32px;">
+      <div class="loading">正在加载内容</div>
+    </div>
+
+    <h2 style="font-size:20px;font-weight:600;margin-bottom:16px;">可下载文件</h2>
+    <div id="file-list">
+      <div class="loading">加载中…</div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:40px 0;" />
+
+    <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;">留言板</h2>
+    <p class="page-subtitle">欢迎留下你的想法</p>
+
+    <div class="grid-2">
+      <div>
+        <form id="message-form" class="card">
+          <div class="form-group">
+            <label class="form-label">姓名 *</label>
+            <input type="text" name="name" class="form-input" required placeholder="你的名字" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">邮箱（选填）</label>
+            <input type="email" name="email" class="form-input" placeholder="your@email.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">留言内容 *</label>
+            <textarea name="content" class="form-textarea" required placeholder="写点什么…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">提交留言</button>
+        </form>
+      </div>
+
+      <div id="message-list">
+        <div class="loading">加载留言中…</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    &copy; 2026 MySite. All rights reserved.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
