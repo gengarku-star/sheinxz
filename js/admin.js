@@ -115,8 +115,16 @@ async function loadPages() {
         <input type="text" class="form-input page-title-input" value="${escapeHtml(page.title)}" />
       </div>
       <div class="form-group">
-        <label class="form-label">内容（支持 HTML 标签，如 &lt;h2&gt; &lt;p&gt; &lt;ul&gt; &lt;strong&gt; 等）</label>
-        <textarea class="form-textarea page-content-input" rows="16">${escapeHtml(page.content)}</textarea>
+        <label class="form-label">内容（支持 HTML 标签，如 &lt;h2&gt; &lt;p&gt; &lt;ul&gt; &lt;strong&gt; &lt;img&gt; 等）</label>
+        <textarea class="form-textarea page-content-input" id="content-${page.id}" rows="16">${escapeHtml(page.content)}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">插入图片</label>
+        <div class="image-upload-row">
+          <input type="file" accept="image/*" class="form-input page-image-input" id="img-input-${page.id}" />
+          <button class="btn btn-sm" onclick="uploadAndInsertImage('${page.id}')">上传图片</button>
+        </div>
+        <div class="image-preview-area" id="img-preview-${page.id}"></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span class="card-meta">slug: ${escapeHtml(page.slug)} · 更新于 ${formatTime(page.updated_at)}</span>
@@ -124,6 +132,52 @@ async function loadPages() {
       </div>
     </div>
   `).join('');
+}
+
+async function uploadAndInsertImage(pageId) {
+  const input = document.getElementById('img-input-' + pageId);
+  const preview = document.getElementById('img-preview-' + pageId);
+  const file = input.files[0];
+
+  if (!file) {
+    showToast('请先选择图片');
+    return;
+  }
+
+  preview.innerHTML = '<span class="card-meta">上传中…</span>';
+
+  const filePath = `images/${Date.now()}_${file.name}`;
+  const { error: uploadError } = await supabase.storage
+    .from('site-files')
+    .upload(filePath, file);
+
+  if (uploadError) {
+    preview.innerHTML = `<span style="color:#dc2626;">上传失败：${escapeHtml(uploadError.message)}</span>`;
+    return;
+  }
+
+  const { data: urlData } = supabase.storage.from('site-files').getPublicUrl(filePath);
+  const imgUrl = urlData.publicUrl;
+  const imgTag = `<img src="${imgUrl}" alt="${escapeHtml(file.name)}" style="max-width:100%;height:auto;border-radius:8px;margin:12px 0;" />`;
+
+  preview.innerHTML = `
+    <div style="margin-top:8px;">
+      <img src="${imgUrl}" style="max-width:200px;max-height:150px;border-radius:6px;border:1px solid var(--border);" />
+      <p class="card-meta" style="margin-top:6px;">图片已上传，点击下方按钮插入到内容中光标位置</p>
+      <button class="btn btn-sm btn-primary" onclick="insertImageTag('${pageId}', \`${imgTag.replace(/`/g, '\\`')}\`)">插入到内容</button>
+    </div>
+  `;
+}
+
+function insertImageTag(pageId, imgTag) {
+  const textarea = document.getElementById('content-' + pageId);
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  textarea.value = text.substring(0, start) + '\n' + imgTag + '\n' + text.substring(end);
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = start + imgTag.length + 2;
+  showToast('图片已插入，记得点保存');
 }
 
 async function savePage(id) {

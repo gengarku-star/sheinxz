@@ -1,3 +1,16 @@
+/* ---- 图片上传行 ---- */
+.image-upload-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.image-upload-row .form-input {
+  flex: 1;
+}
+.image-preview-area {
+  min-height: 0;
+}
+
 /* ---- 文章正文 ---- */
 .article-content {
   margin-top: 24px;
