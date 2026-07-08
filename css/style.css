@@ -1,29 +1,29 @@
 /* ============================================
    SHEIN 校园大使 — 雇主品牌视觉
-   主色：SHEIN Black · 辅色：Warm White · 点缀：Vibrant Accent
+   主色：SHEIN Black · 辅色：Pure White · 点缀：Vibrant Accent
    ============================================ */
 
 :root {
   --primary: #000000;
-  --primary-hover: #222222;
-  --accent: #ff4747;
-  --accent-light: #fff0f0;
-  --accent-hover: #e63e3e;
-  --bg: #f5f5f0;
+  --primary-hover: #1a1a1a;
+  --accent: #ff2d55;
+  --accent-light: #fff5f7;
+  --accent-hover: #e6264d;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --text: #1a1a1a;
-  --text-secondary: #8c8c8c;
-  --text-muted: #b3b3b3;
-  --border: #eaeaea;
-  --border-light: #f0f0f0;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 2px 8px rgba(0,0,0,.06);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
+  --text: #0a0a0a;
+  --text-secondary: #737373;
+  --text-muted: #a3a3a3;
+  --border: #e5e5e5;
+  --border-light: #f5f5f5;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.06);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.08);
   --font-sans: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", monospace;
-  --transition: .2s cubic-bezier(.4,0,.2,1);
+  --transition: .25s cubic-bezier(.4,0,.2,1);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,47 +47,48 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 0 rgba(255,255,255,.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
 }
 .navbar-inner {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 28px;
-  height: 60px;
+  padding: 0 32px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .navbar-brand {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   color: #fff;
   letter-spacing: -.02em;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .navbar-brand::before {
   content: '';
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: var(--accent);
   border-radius: 50%;
+  box-shadow: 0 0 12px var(--accent);
 }
 .navbar-brand:hover { color: #fff; text-decoration: none; }
-.navbar-links { display: flex; gap: 4px; }
+.navbar-links { display: flex; gap: 6px; }
 .navbar-links a {
-  padding: 7px 16px;
-  border-radius: 6px;
-  color: rgba(255,255,255,.65);
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: rgba(255,255,255,.7);
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: .01em;
-  transition: background var(--transition), color var(--transition);
+  font-weight: 600;
+  letter-spacing: .02em;
+  transition: all var(--transition);
 }
 .navbar-links a:hover {
-  background: rgba(255,255,255,.1);
+  background: rgba(255,255,255,.12);
   color: #fff;
   text-decoration: none;
 }
@@ -95,26 +96,27 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   background: var(--accent);
   color: #fff;
   text-decoration: none;
+  box-shadow: 0 2px 8px rgba(255,45,85,.3);
 }
 
 /* ---- 内容区 ---- */
 .container {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 48px 28px;
+  padding: 56px 32px;
 }
 
 .page-title {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 800;
   letter-spacing: -.03em;
-  line-height: 1.2;
-  margin-bottom: 8px;
+  line-height: 1.15;
+  margin-bottom: 10px;
   color: var(--text);
 }
 .page-subtitle {
   color: var(--text-secondary);
-  margin-bottom: 36px;
+  margin-bottom: 40px;
   font-size: 15px;
   font-weight: 400;
 }
@@ -124,8 +126,8 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 28px;
-  margin-bottom: 16px;
+  padding: 32px;
+  margin-bottom: 20px;
   box-shadow: var(--shadow);
   transition: box-shadow var(--transition), transform var(--transition);
 }
@@ -133,24 +135,24 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow-md);
 }
 .card-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   letter-spacing: -.01em;
 }
 .card-meta {
   font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
-.card p { margin-bottom: 8px; }
+.card p { margin-bottom: 10px; }
 
 /* ---- 按钮 ---- */
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 20px;
+  padding: 10px 22px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -160,10 +162,10 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   font-family: var(--font-sans);
   cursor: pointer;
   transition: all var(--transition);
-  letter-spacing: .01em;
+  letter-spacing: .02em;
 }
 .btn:hover {
-  background: var(--bg);
+  background: var(--border-light);
   border-color: var(--text-muted);
   text-decoration: none;
 }
@@ -175,6 +177,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
 .btn-primary:hover {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
 }
 .btn-accent {
   background: var(--accent);
@@ -319,25 +322,25 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
 /* ---- 页脚 ---- */
 .footer {
   text-align: center;
-  padding: 32px 24px;
+  padding: 40px 32px;
   color: var(--text-muted);
   font-size: 12px;
-  letter-spacing: .02em;
-  border-top: 1px solid var(--border-light);
-  margin-top: 48px;
+  letter-spacing: .04em;
+  border-top: 1px solid var(--border);
+  margin-top: 64px;
 }
 
 /* ---- 段落标题 & 分割线 ---- */
 .section-heading {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -.02em;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 .section-divider {
   border: none;
-  border-top: 1px solid var(--border-light);
-  margin: 44px 0;
+  border-top: 1px solid var(--border);
+  margin: 56px 0;
 }
 
 /* ---- 双栏网格 ---- */
@@ -587,30 +590,33 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
    ============================================ */
 .month-selector {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 .month-btn {
-  padding: 8px 18px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
+  padding: 10px 22px;
+  border: 1.5px solid var(--border);
+  border-radius: 24px;
   background: #fff;
   color: var(--text-secondary);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
   font-family: var(--font-sans);
+  letter-spacing: .01em;
 }
 .month-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+  box-shadow: 0 2px 8px rgba(255,45,85,.12);
 }
 .month-btn.active {
   background: var(--primary);
   color: #fff;
   border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
 }
 
 /* ============================================
@@ -618,44 +624,50 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
    ============================================ */
 .rank-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
 }
 .rank-board {
-  background: var(--card);
-  border: 1px solid var(--border-light);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 24px;
   box-shadow: var(--shadow);
+  transition: all var(--transition);
+}
+.rank-board:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 .rank-header {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 2px solid var(--accent);
+  letter-spacing: -.01em;
 }
 .rank-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f5f5f5;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
 }
 .rank-item:last-child {
   border-bottom: none;
 }
 .rank-medal {
-  font-size: 18px;
-  width: 28px;
+  font-size: 20px;
+  width: 32px;
   text-align: center;
   flex-shrink: 0;
 }
 .rank-num {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: linear-gradient(135deg, #f5f5f5, #e8e8e8);
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 700;
@@ -666,15 +678,12 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
 }
 .rank-name {
   flex: 1;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.01em;
 }
 .rank-count {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--accent);
-  min-width: 40px;
-  text-align: right;
+  display: none;
 }
 .rank-empty {
   color: var(--text-secondary);
@@ -731,7 +740,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   font-weight: 700;
 }
 .calendar-day.has-event {
-  background: #fff0f0;
+  background: var(--accent-light);
   color: var(--accent);
   font-weight: 700;
   cursor: pointer;
@@ -739,6 +748,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
 .calendar-day.has-event:hover {
   background: var(--accent);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(255,45,85,.25);
 }
 .event-dot {
   position: absolute;
@@ -808,64 +818,65 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
    ============================================ */
 .activity-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
 }
 .activity-card {
   display: flex;
   flex-direction: column;
-  background: var(--card);
-  border: 1px solid var(--border-light);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: all 0.2s;
+  transition: all var(--transition);
   box-shadow: var(--shadow);
 }
 .activity-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
   border-color: var(--accent);
 }
 .activity-img {
   width: 100%;
-  height: 180px;
+  height: 200px;
   overflow: hidden;
-  background: #f0f0f0;
+  background: #f8f8f8;
 }
 .activity-img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.4s ease;
 }
 .activity-card:hover .activity-img img {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 .activity-img.placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  background: linear-gradient(135deg, #f5f5f0, #e8e8e3);
+  font-size: 56px;
+  background: linear-gradient(135deg, #fafafa, #f0f0f0);
 }
 .activity-body {
-  padding: 16px 20px;
+  padding: 20px 24px;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 .activity-title {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  letter-spacing: -.01em;
 }
 .activity-desc {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0 0 12px;
+  line-height: 1.7;
+  margin: 0 0 14px;
   flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -873,9 +884,10 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow: hidden;
 }
 .activity-link {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--accent);
+  letter-spacing: .02em;
 }
 
 /* ============================================
