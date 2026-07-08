@@ -394,3 +394,13 @@ CREATE POLICY "calendar_auth_write" ON calendar_events FOR ALL USING (auth.role(
 -- 15. activities 策略：所有人可读，认证用户可写
 CREATE POLICY "activities_public_read" ON activities FOR SELECT USING (true);
 CREATE POLICY "activities_auth_write" ON activities FOR ALL USING (auth.role() = 'authenticated');
+
+-- ============================================
+-- v3: 文件预览图 + 日历事件链接
+-- ============================================
+
+-- 16. 文件表增加预览图字段
+ALTER TABLE files ADD COLUMN IF NOT EXISTS preview_url TEXT DEFAULT '';
+
+-- 17. 日历事件表增加链接字段
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS link_url TEXT DEFAULT '';

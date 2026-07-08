@@ -24,6 +24,20 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+// ---- 文件类型图标 ----
+function getFileIcon(typeOrName) {
+  const t = (typeOrName || '').toLowerCase();
+  if (t.includes('pdf') || t.endsWith('.pdf')) return '📕';
+  if (t.includes('word') || t.includes('document') || t.endsWith('.doc') || t.endsWith('.docx')) return '📘';
+  if (t.includes('excel') || t.includes('sheet') || t.endsWith('.xls') || t.endsWith('.xlsx') || t.endsWith('.csv')) return '📗';
+  if (t.includes('powerpoint') || t.includes('presentation') || t.endsWith('.ppt') || t.endsWith('.pptx')) return '📙';
+  if (t.includes('image') || /\.(png|jpe?g|gif|svg|webp|bmp)$/.test(t)) return '🖼️';
+  if (t.includes('video') || /\.(mp4|avi|mov|wmv|mkv)$/.test(t)) return '🎬';
+  if (t.includes('audio') || /\.(mp3|wav|ogg|flac|aac)$/.test(t)) return '🎵';
+  if (t.includes('zip') || t.includes('rar') || t.includes('7z') || t.includes('tar') || t.includes('gz')) return '📦';
+  return '📄';
+}
+
 // ---- 格式化时间 ----
 function formatTime(dateStr) {
   const d = new Date(dateStr);
@@ -75,14 +89,20 @@ async function loadFiles() {
 
   container.innerHTML = data.map(file => {
     const { data: urlData } = supabase.storage.from('site-files').getPublicUrl(file.file_path);
+    const previewHtml = file.preview_url
+      ? `<div class="file-preview"><img src="${escapeHtml(file.preview_url)}" alt="${escapeHtml(file.name)}" /></div>`
+      : `<div class="file-preview file-icon-preview"><span>${getFileIcon(file.file_type || file.name)}</span></div>`;
     return `
-      <div class="card">
-        <div class="card-title">${escapeHtml(file.name)}</div>
-        ${file.description ? `<p class="card-meta">${escapeHtml(file.description)}</p>` : ''}
-        <div class="card-meta">
-          ${formatFileSize(file.file_size)} · 上传于 ${formatTime(file.created_at)}
+      <div class="card file-card">
+        ${previewHtml}
+        <div class="file-card-body">
+          <div class="card-title">${escapeHtml(file.name)}</div>
+          ${file.description ? `<p class="card-meta">${escapeHtml(file.description)}</p>` : ''}
+          <div class="card-meta">
+            ${formatFileSize(file.file_size)} · 上传于 ${formatTime(file.created_at)}
+          </div>
+          <a href="${urlData.publicUrl}" download class="btn btn-primary btn-sm">下载</a>
         </div>
-        <a href="${urlData.publicUrl}" download class="btn btn-primary btn-sm">下载</a>
       </div>`;
   }).join('');
 }
@@ -310,7 +330,7 @@ async function loadCalendar(container, year, month) {
     const hasEvent = dayEvents && dayEvents.length > 0;
     const today = now.getFullYear() === year && now.getMonth() === month && now.getDate() === d;
 
-    html += `<div class="calendar-day${hasEvent ? ' has-event' : ''}${today ? ' today' : ''}" ${hasEvent ? `onclick="showEventPopup(this, ${JSON.stringify(dayEvents.map(e => ({title: e.title, description: e.description}))).replace(/"/g, '&quot;')})"` : ''}>
+    html += `<div class="calendar-day${hasEvent ? ' has-event' : ''}${today ? ' today' : ''}" ${hasEvent ? `onclick="showEventPopup(this, ${JSON.stringify(dayEvents.map(e => ({title: e.title, description: e.description, link_url: e.link_url || ''}))).replace(/"/g, '&quot;')})"` : ''}>
       <span class="day-num">${d}</span>
       ${hasEvent ? '<span class="event-dot"></span>' : ''}
     </div>`;
@@ -326,9 +346,12 @@ function showEventPopup(el, events) {
 
   const popup = document.createElement('div');
   popup.className = 'event-popup';
-  popup.innerHTML = events.map(e =>
-    `<div class="event-popup-item"><strong>${escapeHtml(e.title)}</strong>${e.description ? `<p>${escapeHtml(e.description)}</p>` : ''}</div>`
-  ).join('');
+  popup.innerHTML = events.map(e => {
+    const linkHtml = e.link_url
+      ? `<a href="${escapeHtml(e.link_url)}" target="_blank" rel="noopener" class="event-popup-link">点击跳转 →</a>`
+      : '';
+    return `<div class="event-popup-item"><strong>${escapeHtml(e.title)}</strong>${e.description ? `<p>${escapeHtml(e.description)}</p>` : ''}${linkHtml}</div>`;
+  }).join('');
 
   el.style.position = 'relative';
   el.appendChild(popup);

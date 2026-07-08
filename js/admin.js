@@ -34,6 +34,19 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+function getFileIcon(typeOrName) {
+  const t = (typeOrName || '').toLowerCase();
+  if (t.includes('pdf') || t.endsWith('.pdf')) return '📕';
+  if (t.includes('word') || t.includes('document') || t.endsWith('.doc') || t.endsWith('.docx')) return '📘';
+  if (t.includes('excel') || t.includes('sheet') || t.endsWith('.xls') || t.endsWith('.xlsx') || t.endsWith('.csv')) return '📗';
+  if (t.includes('powerpoint') || t.includes('presentation') || t.endsWith('.ppt') || t.endsWith('.pptx')) return '📙';
+  if (t.includes('image') || /\.(png|jpe?g|gif|svg|webp|bmp)$/.test(t)) return '🖼️';
+  if (t.includes('video') || /\.(mp4|avi|mov|wmv|mkv)$/.test(t)) return '🎬';
+  if (t.includes('audio') || /\.(mp3|wav|ogg|flac|aac)$/.test(t)) return '🎵';
+  if (t.includes('zip') || t.includes('rar') || t.includes('7z') || t.includes('tar') || t.includes('gz')) return '📦';
+  return '📄';
+}
+
 // ============================================
 // 登录页
 // ============================================
@@ -246,6 +259,7 @@ async function loadAdminFiles() {
     <table class="admin-table">
       <thead>
         <tr>
+          <th style="width:60px">预览</th>
           <th>文件名</th>
           <th>说明</th>
           <th>大小</th>
@@ -256,6 +270,7 @@ async function loadAdminFiles() {
       <tbody>
         ${data.map(f => `
           <tr>
+            <td>${f.preview_url ? `<img src="${escapeHtml(f.preview_url)}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;" />` : `<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;border-radius:6px;font-size:22px;">${getFileIcon(f.file_type || f.name)}</div>`}</td>
             <td>${escapeHtml(f.name)}</td>
             <td>${escapeHtml(f.description) || '-'}</td>
             <td>${formatFileSize(f.file_size)}</td>
@@ -280,8 +295,8 @@ async function uploadFile(file) {
     return;
   }
 
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const filePath = `files/${Date.now()}_${safeName}`;
+  const ext = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '') || 'bin';
+  const filePath = `files/${Date.now()}.${ext}`;
 
   console.log('Uploading file:', { name: file.name, size: file.size, type: file.type, path: filePath });
 
@@ -307,6 +322,26 @@ async function uploadFile(file) {
   }
 
   const description = document.getElementById('file-description').value.trim();
+  const previewInput = document.getElementById('file-preview-input');
+  let preview_url = '';
+
+  // 上传预览图（如果有）
+  if (previewInput && previewInput.files[0]) {
+    const previewFile = previewInput.files[0];
+    const previewExt = previewFile.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
+    const previewPath = `images/preview_${Date.now()}.${previewExt || 'png'}`;
+    const { error: previewError } = await supabase.storage
+      .from('site-files')
+      .upload(previewPath, previewFile, { upsert: false });
+
+    if (previewError) {
+      showToast('预览图上传失败：' + previewError.message);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from('site-files').getPublicUrl(previewPath);
+    preview_url = urlData.publicUrl;
+  }
 
   const { error: insertError } = await supabase.from('files').insert({
     name: file.name,
@@ -314,6 +349,7 @@ async function uploadFile(file) {
     file_path: filePath,
     file_size: file.size,
     file_type: file.type,
+    preview_url,
   });
 
   if (insertError) {
@@ -324,6 +360,9 @@ async function uploadFile(file) {
   showToast('上传成功');
   document.getElementById('file-description').value = '';
   document.getElementById('file-input').value = '';
+  if (document.getElementById('file-preview-input')) {
+    document.getElementById('file-preview-input').value = '';
+  }
   loadAdminFiles();
 }
 
@@ -594,25 +633,27 @@ async function loadCalendarEvents() {
     return;
   }
 
-  container.innerHTML = '<table class="admin-table"><thead><tr><th>日期</th><th>标题</th><th>描述</th><th>操作</th></tr></thead><tbody>' +
+  container.innerHTML = '<table class="admin-table"><thead><tr><th>日期</th><th>标题</th><th>描述</th><th>链接</th><th>操作</th></tr></thead><tbody>' +
     data.map(ev => `
       <tr>
         <td>${ev.event_date}</td>
         <td>${escapeHtml(ev.title)}</td>
         <td>${escapeHtml(ev.description) || '-'}</td>
+        <td>${ev.link_url ? `<a href="${escapeHtml(ev.link_url)}" target="_blank" style="color:var(--accent);font-size:12px;">打开</a>` : '-'}</td>
         <td>
-          <button class="btn btn-sm" onclick="editCalendarEvent('${ev.id}','${ev.event_date}','${escapeHtml(ev.title).replace(/'/g, "\\'")}','${escapeHtml(ev.description || '').replace(/'/g, "\\'")}')" style="margin-right:4px;">编辑</button>
+          <button class="btn btn-sm" onclick="editCalendarEvent('${ev.id}','${ev.event_date}',${JSON.stringify(ev.title).replace(/"/g, '&quot;')},${JSON.stringify(ev.description || '').replace(/"/g, '&quot;')},${JSON.stringify(ev.link_url || '').replace(/"/g, '&quot;')})" style="margin-right:4px;">编辑</button>
           <button class="btn btn-danger btn-sm" onclick="deleteCalendarEvent('${ev.id}')">删除</button>
         </td>
       </tr>
     `).join('') + '</tbody></table>';
 }
 
-function editCalendarEvent(id, date, title, description) {
+function editCalendarEvent(id, date, title, description, linkUrl) {
   editingEventId = id;
   document.getElementById('event-date').value = date;
   document.getElementById('event-title').value = title;
   document.getElementById('event-desc').value = description;
+  document.getElementById('event-link').value = linkUrl || '';
   document.getElementById('add-event-btn').textContent = '更新';
 }
 
@@ -621,6 +662,7 @@ function resetEventForm() {
   document.getElementById('event-date').value = '';
   document.getElementById('event-title').value = '';
   document.getElementById('event-desc').value = '';
+  document.getElementById('event-link').value = '';
   document.getElementById('add-event-btn').textContent = '添加';
 }
 
@@ -628,6 +670,7 @@ async function addCalendarEvent() {
   const date = document.getElementById('event-date').value;
   const title = document.getElementById('event-title').value.trim();
   const description = document.getElementById('event-desc').value.trim();
+  const link_url = document.getElementById('event-link').value.trim();
 
   if (!date || !title) {
     showToast('请填写日期和标题');
@@ -637,7 +680,7 @@ async function addCalendarEvent() {
   if (editingEventId) {
     // 更新模式
     const { error } = await supabase.from('calendar_events').update({
-      event_date: date, title, description
+      event_date: date, title, description, link_url
     }).eq('id', editingEventId);
 
     if (error) {
@@ -649,7 +692,7 @@ async function addCalendarEvent() {
   } else {
     // 新增模式
     const { error } = await supabase.from('calendar_events').insert({
-      event_date: date, title, description
+      event_date: date, title, description, link_url
     });
 
     if (error) {
@@ -659,6 +702,7 @@ async function addCalendarEvent() {
     showToast('事件已添加');
     document.getElementById('event-title').value = '';
     document.getElementById('event-desc').value = '';
+    document.getElementById('event-link').value = '';
   }
   loadCalendarEvents();
 }
@@ -864,6 +908,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const fileInput = document.getElementById('file-input');
   const uploadBtn = document.getElementById('upload-btn');
   const uploadZone = document.getElementById('upload-zone');
+  let pendingFile = null; // 拖拽上传的文件暂存
 
   if (uploadZone) {
     uploadZone.addEventListener('click', () => fileInput.click());
@@ -878,15 +923,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       uploadZone.classList.remove('dragover');
       if (e.dataTransfer.files.length > 0) {
-        fileInput.files = e.dataTransfer.files;
-        uploadZone.querySelector('p').textContent = `已选择: ${e.dataTransfer.files[0].name}`;
+        pendingFile = e.dataTransfer.files[0];
+        fileInput.value = ''; // 清空 input，优先使用拖拽文件
+        uploadZone.querySelector('p').textContent = `已选择: ${pendingFile.name}`;
+      }
+    });
+  }
+
+  // 点击选择文件时同步到 pendingFile
+  if (fileInput) {
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        pendingFile = fileInput.files[0];
+        uploadZone.querySelector('p').textContent = `已选择: ${pendingFile.name}`;
       }
     });
   }
 
   if (uploadBtn) {
     uploadBtn.addEventListener('click', () => {
-      const file = fileInput.files[0];
+      const file = pendingFile || fileInput.files[0];
       if (!file) {
         showToast('请先选择文件');
         return;
@@ -896,6 +952,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       uploadFile(file).finally(() => {
         uploadBtn.disabled = false;
         uploadBtn.textContent = '上传文件';
+        pendingFile = null;
       });
     });
   }

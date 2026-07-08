@@ -936,3 +936,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
     transform: none;
   }
 }
+
+/* ============================================
+   文件卡片 — 预览图 + 信息
+   ============================================ */
+.file-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+}
+.file-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f8f8f8;
+  border: 1px solid var(--border-light);
+}
+.file-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.file-icon-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  background: linear-gradient(135deg, #fafafa, #f0f0f0);
+}
+.file-card-body {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 480px) {
+  .file-card {
+    flex-direction: column;
+  }
+  .file-preview {
+    width: 100%;
+    height: 120px;
+  }
+}
+
+/* ============================================
+   日历事件弹窗 — 链接样式
+   ============================================ */
+.event-popup-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: .02em;
+  transition: color 0.2s;
+}
+.event-popup-link:hover {
+  color: #ff6b8a;
+  text-decoration: none;
+}
