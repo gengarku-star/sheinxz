@@ -150,10 +150,10 @@ async function uploadAndInsertImage(pageId) {
   preview.innerHTML = '<span class="card-meta">上传中…</span>';
 
   const ext = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
-  const filePath = `images/${Date.now()}.${ext}`;
+  const filePath = `images/${Date.now()}.${ext || 'png'}`;
   const { error: uploadError } = await supabase.storage
     .from('site-files')
-    .upload(filePath, file);
+    .upload(filePath, file, { upsert: false });
 
   if (uploadError) {
     preview.innerHTML = '<span style="color:#dc2626;">上传失败：' + escapeHtml(uploadError.message) + '</span>';
@@ -268,14 +268,41 @@ async function loadAdminFiles() {
 }
 
 async function uploadFile(file) {
-  const filePath = `${Date.now()}_${file.name}`;
+  if (!file || !file.name) {
+    showToast('请先选择文件');
+    return;
+  }
 
-  const { error: uploadError } = await supabase.storage
-    .from('site-files')
-    .upload(filePath, file);
+  // 检查登录状态
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    showToast('登录已过期，请重新登录后再上传');
+    return;
+  }
 
-  if (uploadError) {
-    showToast('上传失败：' + uploadError.message);
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const filePath = `files/${Date.now()}_${safeName}`;
+
+  console.log('Uploading file:', { name: file.name, size: file.size, type: file.type, path: filePath });
+
+  try {
+    const { data, error: uploadError } = await supabase.storage
+      .from('site-files')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      showToast('上传失败：' + uploadError.message + (uploadError.statusCode ? ` (状态码: ${uploadError.statusCode})` : ''));
+      return;
+    }
+
+    console.log('Upload success:', data);
+  } catch (e) {
+    console.error('Upload exception:', e);
+    showToast('上传异常：' + e.message);
     return;
   }
 
@@ -723,10 +750,10 @@ async function addActivity() {
 
   if (imageFile) {
     const ext = imageFile.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
-    const filePath = `images/activity_${Date.now()}.${ext}`;
+    const filePath = `images/activity_${Date.now()}.${ext || 'png'}`;
     const { error: uploadError } = await supabase.storage
       .from('site-files')
-      .upload(filePath, imageFile);
+      .upload(filePath, imageFile, { upsert: false });
 
     if (uploadError) {
       showToast('图片上传失败：' + uploadError.message);
