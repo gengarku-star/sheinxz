@@ -361,6 +361,352 @@ async function deleteMessage(id) {
 }
 
 // ============================================
+// 内推管理
+// ============================================
+const REFERRAL_CATEGORIES = [
+  { key: 'resumes', emoji: '🏆', title: '内推简历数 Top 10' },
+  { key: 'interviews', emoji: '🎯', title: '内推面试数 Top 10' },
+  { key: 'offers', emoji: '🎉', title: '内推 offer 数 Top 10' },
+  { key: 'top_positions', emoji: '📋', title: '简历数 Top 10 岗位' },
+  { key: 'lacking_positions', emoji: '⚠️', title: '简历欠缺 Top 10 岗位' },
+];
+
+async function loadReferralMonths() {
+  const select = document.getElementById('referral-month-select');
+  if (!select) return;
+
+  const { data } = await supabase
+    .from('referral_rankings')
+    .select('month')
+    .order('month', { ascending: false });
+
+  const months = [...new Set((data || []).map(r => r.month))].sort().reverse();
+
+  select.innerHTML = months.length > 0
+    ? months.map(m => `<option value="${m}">${m}</option>`).join('')
+    : '<option value="">暂无月份</option>';
+
+  if (months.length > 0) {
+    loadReferralEditor(months[0]);
+  } else {
+    document.getElementById('referral-editor').innerHTML = '<div class="empty-state"><p>暂无数据，请点击"新增月份"创建</p></div>';
+  }
+}
+
+async function addReferralMonth() {
+  const month = prompt('请输入月份（格式：YYYY-MM，如 2026-07）：');
+  if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+    showToast('格式不正确，请输入 YYYY-MM 格式');
+    return;
+  }
+
+  // 检查是否已存在
+  const { data: existing } = await supabase
+    .from('referral_rankings')
+    .select('id')
+    .eq('month', month)
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    showToast('该月份已存在');
+    document.getElementById('referral-month-select').value = month;
+    loadReferralEditor(month);
+    return;
+  }
+
+  // 创建空记录
+  const records = [];
+  REFERRAL_CATEGORIES.forEach(cat => {
+    for (let i = 1; i <= 10; i++) {
+      records.push({ month, category: cat.key, rank_order: i, name: '', count: 0 });
+    }
+  });
+
+  const { error } = await supabase.from('referral_rankings').insert(records);
+  if (error) {
+    showToast('创建失败：' + error.message);
+    return;
+  }
+
+  showToast('已创建 ' + month);
+  loadReferralMonths();
+}
+
+async function loadReferralEditor(month) {
+  const editor = document.getElementById('referral-editor');
+  if (!editor) return;
+
+  editor.innerHTML = '<div class="loading">加载中…</div>';
+
+  const { data, error } = await supabase
+    .from('referral_rankings')
+    .select('*')
+    .eq('month', month)
+    .order('category')
+    .order('rank_order');
+
+  if (error || !data) {
+    editor.innerHTML = '<p>加载失败</p>';
+    return;
+  }
+
+  editor.innerHTML = REFERRAL_CATEGORIES.map(cat => {
+    const items = data.filter(d => d.category === cat.key);
+    return `
+      <div class="card" style="margin-bottom:16px;">
+        <h4 style="margin:0 0 12px;font-size:15px;">${cat.emoji} ${cat.title}</h4>
+        <table class="admin-table referral-table">
+          <thead>
+            <tr><th style="width:50px">#</th><th>${cat.key.includes('position') ? '岗位名称' : '姓名'}</th><th style="width:100px">数量</th><th style="width:60px">操作</th></tr>
+          </thead>
+          <tbody>
+            ${items.map((item, idx) => `
+              <tr data-id="${item.id}">
+                <td>${idx + 1}</td>
+                <td><input type="text" class="form-input rank-name-input" value="${escapeHtml(item.name)}" placeholder="${cat.key.includes('position') ? '岗位名称' : '姓名'}" /></td>
+                <td><input type="number" class="form-input rank-count-input" value="${item.count}" min="0" /></td>
+                <td><button class="btn btn-danger btn-sm" onclick="deleteReferralRow('${item.id}','${month}')">删除</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-sm" onclick="addReferralRow('${month}','${cat.key}')">+ 添加行</button>
+          <button class="btn btn-primary btn-sm" onclick="saveReferralCategory('${month}','${cat.key}')">保存</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function addReferralRow(month, category) {
+  const { data: maxRows } = await supabase
+    .from('referral_rankings')
+    .select('rank_order')
+    .eq('month', month)
+    .eq('category', category)
+    .order('rank_order', { ascending: false })
+    .limit(1);
+
+  const nextRank = (maxRows && maxRows.length > 0) ? maxRows[0].rank_order + 1 : 1;
+
+  const { error } = await supabase.from('referral_rankings').insert({
+    month, category, rank_order: nextRank, name: '', count: 0
+  });
+
+  if (error) {
+    showToast('添加失败：' + error.message);
+    return;
+  }
+  loadReferralEditor(month);
+}
+
+async function deleteReferralRow(id, month) {
+  const { error } = await supabase.from('referral_rankings').delete().eq('id', id);
+  if (error) {
+    showToast('删除失败');
+    return;
+  }
+  loadReferralEditor(month);
+}
+
+async function saveReferralCategory(month, category) {
+  const rows = document.querySelectorAll(`[data-id]`);
+  const updates = [];
+
+  rows.forEach(row => {
+    const id = row.dataset.id;
+    const name = row.querySelector('.rank-name-input').value.trim();
+    const count = parseInt(row.querySelector('.rank-count-input').value) || 0;
+    updates.push({ id, name, count });
+  });
+
+  // Filter only rows for this category (we need to check by querying)
+  const { data: allRows } = await supabase
+    .from('referral_rankings')
+    .select('id')
+    .eq('month', month)
+    .eq('category', category);
+
+  const categoryIds = new Set((allRows || []).map(r => r.id));
+  const categoryUpdates = updates.filter(u => categoryIds.has(u.id));
+
+  for (const u of categoryUpdates) {
+    const { error } = await supabase
+      .from('referral_rankings')
+      .update({ name: u.name, count: u.count })
+      .eq('id', u.id);
+
+    if (error) {
+      showToast('保存失败：' + error.message);
+      return;
+    }
+  }
+
+  showToast(category + ' 已保存');
+}
+
+// ============================================
+// 动态管理 — 日历事件
+// ============================================
+async function loadCalendarEvents() {
+  const container = document.getElementById('events-container');
+  if (!container) return;
+
+  container.innerHTML = '<div class="loading">加载中…</div>';
+
+  const { data, error } = await supabase
+    .from('calendar_events')
+    .select('*')
+    .order('event_date', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>暂无日历事件</p></div>';
+    return;
+  }
+
+  container.innerHTML = '<table class="admin-table"><thead><tr><th>日期</th><th>标题</th><th>描述</th><th>操作</th></tr></thead><tbody>' +
+    data.map(ev => `
+      <tr>
+        <td>${ev.event_date}</td>
+        <td>${escapeHtml(ev.title)}</td>
+        <td>${escapeHtml(ev.description) || '-'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteCalendarEvent('${ev.id}')">删除</button></td>
+      </tr>
+    `).join('') + '</tbody></table>';
+}
+
+async function addCalendarEvent() {
+  const date = document.getElementById('event-date').value;
+  const title = document.getElementById('event-title').value.trim();
+  const description = document.getElementById('event-desc').value.trim();
+
+  if (!date || !title) {
+    showToast('请填写日期和标题');
+    return;
+  }
+
+  const { error } = await supabase.from('calendar_events').insert({
+    event_date: date, title, description
+  });
+
+  if (error) {
+    showToast('添加失败：' + error.message);
+    return;
+  }
+
+  showToast('事件已添加');
+  document.getElementById('event-title').value = '';
+  document.getElementById('event-desc').value = '';
+  loadCalendarEvents();
+}
+
+async function deleteCalendarEvent(id) {
+  if (!confirm('确定删除此事件？')) return;
+
+  const { error } = await supabase.from('calendar_events').delete().eq('id', id);
+  if (error) {
+    showToast('删除失败');
+    return;
+  }
+  showToast('已删除');
+  loadCalendarEvents();
+}
+
+// ============================================
+// 动态管理 — 活动看板
+// ============================================
+async function loadActivitiesAdmin() {
+  const container = document.getElementById('activities-container');
+  if (!container) return;
+
+  container.innerHTML = '<div class="loading">加载中…</div>';
+
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .order('sort_order')
+    .order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>暂无活动</p></div>';
+    return;
+  }
+
+  container.innerHTML = '<table class="admin-table"><thead><tr><th>封面</th><th>标题</th><th>描述</th><th>链接</th><th>排序</th><th>操作</th></tr></thead><tbody>' +
+    data.map(act => `
+      <tr>
+        <td>${act.image_url ? `<img src="${escapeHtml(act.image_url)}" style="width:60px;height:40px;object-fit:cover;border-radius:4px;" />` : '📢'}</td>
+        <td>${escapeHtml(act.title)}</td>
+        <td>${escapeHtml(act.description) || '-'}</td>
+        <td><a href="${escapeHtml(act.link_url)}" target="_blank" style="color:var(--accent);font-size:12px;">打开</a></td>
+        <td>${act.sort_order}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteActivity('${act.id}')">删除</button></td>
+      </tr>
+    `).join('') + '</tbody></table>';
+}
+
+async function addActivity() {
+  const title = document.getElementById('act-title').value.trim();
+  const link_url = document.getElementById('act-link').value.trim();
+  const description = document.getElementById('act-desc').value.trim();
+  const sort_order = parseInt(document.getElementById('act-order').value) || 0;
+  const imageFile = document.getElementById('act-image').files[0];
+
+  if (!title) {
+    showToast('请填写活动标题');
+    return;
+  }
+
+  let image_url = '';
+
+  if (imageFile) {
+    const ext = imageFile.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
+    const filePath = `images/activity_${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('site-files')
+      .upload(filePath, imageFile);
+
+    if (uploadError) {
+      showToast('图片上传失败：' + uploadError.message);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from('site-files').getPublicUrl(filePath);
+    image_url = urlData.publicUrl;
+  }
+
+  const { error } = await supabase.from('activities').insert({
+    title, description, image_url, link_url, sort_order
+  });
+
+  if (error) {
+    showToast('添加失败：' + error.message);
+    return;
+  }
+
+  showToast('活动已添加');
+  document.getElementById('act-title').value = '';
+  document.getElementById('act-link').value = '';
+  document.getElementById('act-desc').value = '';
+  document.getElementById('act-order').value = '0';
+  document.getElementById('act-image').value = '';
+  loadActivitiesAdmin();
+}
+
+async function deleteActivity(id) {
+  if (!confirm('确定删除此活动？')) return;
+
+  const { error } = await supabase.from('activities').delete().eq('id', id);
+  if (error) {
+    showToast('删除失败');
+    return;
+  }
+  showToast('已删除');
+  loadActivitiesAdmin();
+}
+
+// ============================================
 // 初始化
 // ============================================
 document.addEventListener('DOMContentLoaded', async () => {
@@ -385,6 +731,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadPages();
   loadAdminFiles();
   loadAdminMessages();
+  loadReferralMonths();
+  loadCalendarEvents();
+  loadActivitiesAdmin();
+
+  // 内推管理事件
+  const referralSelect = document.getElementById('referral-month-select');
+  if (referralSelect) {
+    referralSelect.addEventListener('change', (e) => {
+      if (e.target.value) loadReferralEditor(e.target.value);
+    });
+  }
+
+  const addMonthBtn = document.getElementById('add-referral-month-btn');
+  if (addMonthBtn) {
+    addMonthBtn.addEventListener('click', addReferralMonth);
+  }
+
+  // 日历事件
+  const addEventBtn = document.getElementById('add-event-btn');
+  if (addEventBtn) {
+    addEventBtn.addEventListener('click', addCalendarEvent);
+  }
+
+  // 活动看板
+  const addActBtn = document.getElementById('add-activity-btn');
+  if (addActBtn) {
+    addActBtn.addEventListener('click', addActivity);
+  }
 
   // 文件上传
   const fileInput = document.getElementById('file-input');

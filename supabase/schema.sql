@@ -342,3 +342,55 @@ CREATE POLICY "messages_auth_delete" ON messages FOR DELETE USING (auth.role() =
 -- 8. 创建 Storage bucket（需在 Dashboard → Storage 中手动确认创建）
 -- bucket 名称: site-files
 -- 设置为 Public bucket
+
+-- ============================================
+-- v2: 新增内推进度 + SHEIN动态功能表
+-- ============================================
+
+-- 9. 内推排行榜表
+CREATE TABLE referral_rankings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  month TEXT NOT NULL,
+  category TEXT NOT NULL,
+  rank_order INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 10. 日历事件表
+CREATE TABLE calendar_events (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_date DATE NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 11. 活动看板表
+CREATE TABLE activities (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  image_url TEXT DEFAULT '',
+  link_url TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 12. 启用 RLS
+ALTER TABLE referral_rankings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE calendar_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
+
+-- 13. referral_rankings 策略：所有人可读，认证用户可写
+CREATE POLICY "referral_public_read" ON referral_rankings FOR SELECT USING (true);
+CREATE POLICY "referral_auth_write" ON referral_rankings FOR ALL USING (auth.role() = 'authenticated');
+
+-- 14. calendar_events 策略：所有人可读，认证用户可写
+CREATE POLICY "calendar_public_read" ON calendar_events FOR SELECT USING (true);
+CREATE POLICY "calendar_auth_write" ON calendar_events FOR ALL USING (auth.role() = 'authenticated');
+
+-- 15. activities 策略：所有人可读，认证用户可写
+CREATE POLICY "activities_public_read" ON activities FOR SELECT USING (true);
+CREATE POLICY "activities_auth_write" ON activities FOR ALL USING (auth.role() = 'authenticated');

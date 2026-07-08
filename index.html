@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>首页</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <title>SHEIN校园大使 · 2027届工作手册</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=3" />
 </head>
 <body>
   <nav class="navbar">
@@ -16,6 +19,8 @@
         <a href="article.html?slug=operations">运营机制</a>
         <a href="article.html?slug=faq">常见问题</a>
         <a href="article.html?slug=templates">内推模板</a>
+        <a href="referral.html">内推进度</a>
+        <a href="news.html">SHEIN动态</a>
         <a href="resources.html">资源下载</a>
       </div>
     </div>
@@ -26,14 +31,43 @@
     <div class="card" id="page-content">
       <div class="loading">正在加载内容</div>
     </div>
+
+    <hr class="section-divider" />
+
+    <h2 class="section-heading">留言板</h2>
+    <p class="page-subtitle">欢迎留下你的想法</p>
+
+    <div class="grid-2">
+      <div>
+        <form id="message-form" class="card">
+          <div class="form-group">
+            <label class="form-label">姓名 *</label>
+            <input type="text" name="name" class="form-input" required placeholder="你的名字" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">邮箱（选填）</label>
+            <input type="email" name="email" class="form-input" placeholder="your@email.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">留言内容 *</label>
+            <textarea name="content" class="form-textarea" required placeholder="写点什么…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">提交留言</button>
+        </form>
+      </div>
+
+      <div id="message-list">
+        <div class="loading">加载留言中…</div>
+      </div>
+    </div>
   </main>
 
   <footer class="footer">
-    &copy; 2026 MySite. All rights reserved.
+    &copy; 2026 SHEIN · 校园大使工作手册
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabase.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=3"></script>
 </body>
 </html>

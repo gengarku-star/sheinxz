@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>内容详情</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <title>SHEIN校园大使</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=3" />
 </head>
 <body>
   <nav class="navbar">
@@ -16,6 +19,8 @@
         <a href="article.html?slug=operations">运营机制</a>
         <a href="article.html?slug=faq">常见问题</a>
         <a href="article.html?slug=templates">内推模板</a>
+        <a href="referral.html">内推进度</a>
+        <a href="news.html">SHEIN动态</a>
         <a href="resources.html">资源下载</a>
       </div>
     </div>
@@ -28,12 +33,12 @@
   </main>
 
   <footer class="footer">
-    &copy; 2026 MySite. All rights reserved.
+    &copy; 2026 SHEIN · 校园大使工作手册
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabase.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=2"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const slug = new URLSearchParams(window.location.search).get('slug');
