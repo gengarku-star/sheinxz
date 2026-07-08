@@ -549,6 +549,8 @@ async function saveReferralCategory(month, category) {
 // ============================================
 // 动态管理 — 日历事件
 // ============================================
+let editingEventId = null;
+
 async function loadCalendarEvents() {
   const container = document.getElementById('events-container');
   if (!container) return;
@@ -571,9 +573,28 @@ async function loadCalendarEvents() {
         <td>${ev.event_date}</td>
         <td>${escapeHtml(ev.title)}</td>
         <td>${escapeHtml(ev.description) || '-'}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteCalendarEvent('${ev.id}')">删除</button></td>
+        <td>
+          <button class="btn btn-sm" onclick="editCalendarEvent('${ev.id}','${ev.event_date}','${escapeHtml(ev.title).replace(/'/g, "\\'")}','${escapeHtml(ev.description || '').replace(/'/g, "\\'")}')" style="margin-right:4px;">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCalendarEvent('${ev.id}')">删除</button>
+        </td>
       </tr>
     `).join('') + '</tbody></table>';
+}
+
+function editCalendarEvent(id, date, title, description) {
+  editingEventId = id;
+  document.getElementById('event-date').value = date;
+  document.getElementById('event-title').value = title;
+  document.getElementById('event-desc').value = description;
+  document.getElementById('add-event-btn').textContent = '更新';
+}
+
+function resetEventForm() {
+  editingEventId = null;
+  document.getElementById('event-date').value = '';
+  document.getElementById('event-title').value = '';
+  document.getElementById('event-desc').value = '';
+  document.getElementById('add-event-btn').textContent = '添加';
 }
 
 async function addCalendarEvent() {
@@ -586,18 +607,32 @@ async function addCalendarEvent() {
     return;
   }
 
-  const { error } = await supabase.from('calendar_events').insert({
-    event_date: date, title, description
-  });
+  if (editingEventId) {
+    // 更新模式
+    const { error } = await supabase.from('calendar_events').update({
+      event_date: date, title, description
+    }).eq('id', editingEventId);
 
-  if (error) {
-    showToast('添加失败：' + error.message);
-    return;
+    if (error) {
+      showToast('更新失败：' + error.message);
+      return;
+    }
+    showToast('事件已更新');
+    resetEventForm();
+  } else {
+    // 新增模式
+    const { error } = await supabase.from('calendar_events').insert({
+      event_date: date, title, description
+    });
+
+    if (error) {
+      showToast('添加失败：' + error.message);
+      return;
+    }
+    showToast('事件已添加');
+    document.getElementById('event-title').value = '';
+    document.getElementById('event-desc').value = '';
   }
-
-  showToast('事件已添加');
-  document.getElementById('event-title').value = '';
-  document.getElementById('event-desc').value = '';
   loadCalendarEvents();
 }
 
@@ -609,6 +644,7 @@ async function deleteCalendarEvent(id) {
     showToast('删除失败');
     return;
   }
+  if (editingEventId === id) resetEventForm();
   showToast('已删除');
   loadCalendarEvents();
 }
@@ -616,6 +652,8 @@ async function deleteCalendarEvent(id) {
 // ============================================
 // 动态管理 — 活动看板
 // ============================================
+let editingActivityId = null;
+
 async function loadActivitiesAdmin() {
   const container = document.getElementById('activities-container');
   if (!container) return;
@@ -639,11 +677,34 @@ async function loadActivitiesAdmin() {
         <td>${act.image_url ? `<img src="${escapeHtml(act.image_url)}" style="width:60px;height:40px;object-fit:cover;border-radius:4px;" />` : '📢'}</td>
         <td>${escapeHtml(act.title)}</td>
         <td>${escapeHtml(act.description) || '-'}</td>
-        <td><a href="${escapeHtml(act.link_url)}" target="_blank" style="color:var(--accent);font-size:12px;">打开</a></td>
+        <td><a href="${escapeHtml(act.link_url || '#')}" target="_blank" style="color:var(--accent);font-size:12px;">打开</a></td>
         <td>${act.sort_order}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteActivity('${act.id}')">删除</button></td>
+        <td>
+          <button class="btn btn-sm" onclick="editActivity('${act.id}',${JSON.stringify(act.title).replace(/"/g, '&quot;')},${JSON.stringify(act.description || '').replace(/"/g, '&quot;')},${JSON.stringify(act.link_url || '').replace(/"/g, '&quot;')},${act.sort_order})" style="margin-right:4px;">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteActivity('${act.id}')">删除</button>
+        </td>
       </tr>
     `).join('') + '</tbody></table>';
+}
+
+function editActivity(id, title, description, linkUrl, sortOrder) {
+  editingActivityId = id;
+  document.getElementById('act-title').value = title;
+  document.getElementById('act-desc').value = description;
+  document.getElementById('act-link').value = linkUrl;
+  document.getElementById('act-order').value = sortOrder;
+  document.getElementById('act-image').value = '';
+  document.getElementById('add-activity-btn').textContent = '更新';
+}
+
+function resetActivityForm() {
+  editingActivityId = null;
+  document.getElementById('act-title').value = '';
+  document.getElementById('act-desc').value = '';
+  document.getElementById('act-link').value = '';
+  document.getElementById('act-order').value = '0';
+  document.getElementById('act-image').value = '';
+  document.getElementById('add-activity-btn').textContent = '添加';
 }
 
 async function addActivity() {
@@ -676,21 +737,32 @@ async function addActivity() {
     image_url = urlData.publicUrl;
   }
 
-  const { error } = await supabase.from('activities').insert({
-    title, description, image_url, link_url, sort_order
-  });
+  if (editingActivityId) {
+    // 更新模式
+    const updateData = { title, description, link_url, sort_order };
+    if (image_url) updateData.image_url = image_url; // 只有选了新图片才更新封面
 
-  if (error) {
-    showToast('添加失败：' + error.message);
-    return;
+    const { error } = await supabase.from('activities').update(updateData).eq('id', editingActivityId);
+    if (error) {
+      showToast('更新失败：' + error.message);
+      return;
+    }
+    showToast('活动已更新');
+    resetActivityForm();
+  } else {
+    // 新增模式
+    const { error } = await supabase.from('activities').insert({
+      title, description, image_url, link_url, sort_order
+    });
+
+    if (error) {
+      showToast('添加失败：' + error.message);
+      return;
+    }
+    showToast('活动已添加');
   }
 
-  showToast('活动已添加');
-  document.getElementById('act-title').value = '';
-  document.getElementById('act-link').value = '';
-  document.getElementById('act-desc').value = '';
-  document.getElementById('act-order').value = '0';
-  document.getElementById('act-image').value = '';
+  resetActivityForm();
   loadActivitiesAdmin();
 }
 
@@ -702,6 +774,7 @@ async function deleteActivity(id) {
     showToast('删除失败');
     return;
   }
+  if (editingActivityId === id) resetActivityForm();
   showToast('已删除');
   loadActivitiesAdmin();
 }
