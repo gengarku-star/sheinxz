@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=6" />
+  <link rel="stylesheet" href="../css/style.css?v=7" />
 </head>
 <body>
   <nav class="navbar">
@@ -27,6 +27,7 @@
       <button class="tab-btn" data-tab="tab-messages">留言管理</button>
       <button class="tab-btn" data-tab="tab-referral">内推管理</button>
       <button class="tab-btn" data-tab="tab-news">动态管理</button>
+      <button class="tab-btn" data-tab="tab-analytics">访问统计</button>
     </div>
 
     <!-- 内容管理 -->
@@ -151,10 +152,34 @@
         <div class="loading">加载中…</div>
       </div>
     </div>
+
+    <!-- 访问统计 -->
+    <div id="tab-analytics" class="tab-panel">
+      <p class="page-subtitle">查看网站访问数据</p>
+
+      <div id="analytics-cards" class="stats-cards">
+        <div class="loading">加载中…</div>
+      </div>
+
+      <h3 style="margin:28px 0 12px;font-size:16px;">📅 按日期查看</h3>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <label class="form-label" style="margin:0;">选择日期：</label>
+        <input type="date" id="analytics-date" class="form-input" style="width:auto;min-width:160px;" />
+        <button id="analytics-query-btn" class="btn btn-primary btn-sm">查询</button>
+      </div>
+      <div id="analytics-date-detail">
+        <div class="empty-state"><p>选择日期后点击查询</p></div>
+      </div>
+
+      <h3 style="margin:28px 0 12px;font-size:16px;">📊 近 30 天每日访问</h3>
+      <div id="analytics-daily">
+        <div class="loading">加载中…</div>
+      </div>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="../js/supabase.js"></script>
-  <script src="../js/admin.js?v=6"></script>
+  <script src="../js/admin.js?v=7"></script>
 </body>
 </html>

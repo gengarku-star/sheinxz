@@ -404,3 +404,25 @@ ALTER TABLE files ADD COLUMN IF NOT EXISTS preview_url TEXT DEFAULT '';
 
 -- 17. 日历事件表增加链接字段
 ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS link_url TEXT DEFAULT '';
+
+-- ============================================
+-- v4: 访客记录
+-- ============================================
+
+-- 18. 页面访问记录表
+CREATE TABLE page_views (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  page_slug TEXT NOT NULL,
+  view_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  visitor_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(page_slug, view_date, visitor_id)
+);
+
+-- 19. 启用 RLS
+ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
+
+-- 20. page_views 策略：所有人可插入，认证用户可读取
+CREATE POLICY "pageviews_public_insert" ON page_views FOR INSERT WITH CHECK (true);
+CREATE POLICY "pageviews_auth_read" ON page_views FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "pageviews_auth_delete" ON page_views FOR DELETE USING (auth.role() = 'authenticated');

@@ -851,6 +851,180 @@ async function deleteActivity(id) {
 }
 
 // ============================================
+// 访问统计
+// ============================================
+const PAGE_NAMES = {
+  'home': '首页',
+  'resources': '资源下载',
+  'operations': '运营机制',
+  'faq': '常见问题',
+  'templates': '内推模板',
+  'referral': '内推进度',
+  'news': 'SHEIN动态',
+};
+
+async function loadAnalyticsOverview() {
+  const container = document.getElementById('analytics-cards');
+  if (!container) return;
+
+  const today = new Date().toISOString().split('T')[0];
+
+  // 并行查询
+  const [totalRes, todayRes, uniqueRes] = await Promise.all([
+    supabase.from('page_views').select('id', { count: 'exact', head: true }),
+    supabase.from('page_views').select('id', { count: 'exact', head: true }).eq('view_date', today),
+    supabase.from('page_views').select('visitor_id', { count: 'exact', head: true }),
+  ]);
+
+  const totalViews = totalRes.count || 0;
+  const todayViews = todayRes.count || 0;
+
+  // 获取独立访客数
+  const { data: visitors } = await supabase.from('page_views').select('visitor_id');
+  const uniqueVisitors = new Set((visitors || []).map(v => v.visitor_id)).size;
+
+  container.innerHTML = `
+    <div class="stats-card">
+      <div class="stats-number">${totalViews}</div>
+      <div class="stats-label">总浏览量</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-number">${todayViews}</div>
+      <div class="stats-label">今日浏览</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-number">${uniqueVisitors}</div>
+      <div class="stats-label">独立访客</div>
+    </div>
+  `;
+}
+
+async function loadAnalyticsDaily() {
+  const container = document.getElementById('analytics-daily');
+  if (!container) return;
+
+  container.innerHTML = '<div class="loading">加载中…</div>';
+
+  // 获取最近30天的数据
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+  const startDate = thirtyDaysAgo.toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('page_views')
+    .select('view_date, page_slug')
+    .gte('view_date', startDate)
+    .order('view_date', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>近 30 天暂无访问数据</p></div>';
+    return;
+  }
+
+  // 按日期聚合
+  const dailyMap = {};
+  data.forEach(row => {
+    if (!dailyMap[row.view_date]) dailyMap[row.view_date] = { total: 0, pages: {} };
+    dailyMap[row.view_date].total++;
+    if (!dailyMap[row.view_date].pages[row.page_slug]) dailyMap[row.view_date].pages[row.page_slug] = 0;
+    dailyMap[row.view_date].pages[row.page_slug]++;
+  });
+
+  const dates = Object.keys(dailyMap).sort().reverse();
+
+  container.innerHTML = `
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>浏览量</th>
+          ${Object.keys(PAGE_NAMES).map(k => `<th style="font-size:11px;">${PAGE_NAMES[k]}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${dates.map(date => {
+          const d = dailyMap[date];
+          return `<tr>
+            <td><strong>${date}</strong></td>
+            <td><strong>${d.total}</strong></td>
+            ${Object.keys(PAGE_NAMES).map(k => `<td>${d.pages[k] || '-'}</td>`).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function queryAnalyticsDate() {
+  const dateInput = document.getElementById('analytics-date');
+  const container = document.getElementById('analytics-date-detail');
+  if (!dateInput || !container) return;
+
+  const date = dateInput.value;
+  if (!date) {
+    showToast('请选择日期');
+    return;
+  }
+
+  container.innerHTML = '<div class="loading">查询中…</div>';
+
+  const { data, error } = await supabase
+    .from('page_views')
+    .select('page_slug, visitor_id')
+    .eq('view_date', date);
+
+  if (error) {
+    container.innerHTML = '<div class="empty-state"><p>查询失败</p></div>';
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>${date} 没有访问记录</p></div>`;
+    return;
+  }
+
+  // 按页面聚合
+  const pageMap = {};
+  data.forEach(row => {
+    if (!pageMap[row.page_slug]) pageMap[row.page_slug] = { views: 0, visitors: new Set() };
+    pageMap[row.page_slug].views++;
+    pageMap[row.page_slug].visitors.add(row.visitor_id);
+  });
+
+  const totalPages = data.length;
+  const totalVisitors = new Set(data.map(r => r.visitor_id)).size;
+
+  const rows = Object.keys(pageMap)
+    .map(slug => ({
+      name: PAGE_NAMES[slug] || slug,
+      views: pageMap[slug].views,
+      visitors: pageMap[slug].visitors.size,
+    }))
+    .sort((a, b) => b.views - a.views);
+
+  container.innerHTML = `
+    <div class="stats-cards" style="margin-bottom:16px;">
+      <div class="stats-card stats-card-sm">
+        <div class="stats-number">${totalPages}</div>
+        <div class="stats-label">当日浏览量</div>
+      </div>
+      <div class="stats-card stats-card-sm">
+        <div class="stats-number">${totalVisitors}</div>
+        <div class="stats-label">当日访客</div>
+      </div>
+    </div>
+    <table class="admin-table">
+      <thead>
+        <tr><th>页面</th><th>浏览量</th><th>独立访客</th></tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `<tr><td>${escapeHtml(r.name)}</td><td>${r.views}</td><td>${r.visitors}</td></tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ============================================
 // 初始化
 // ============================================
 document.addEventListener('DOMContentLoaded', async () => {
@@ -878,6 +1052,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadReferralMonths();
   loadCalendarEvents();
   loadActivitiesAdmin();
+  loadAnalyticsOverview();
+  loadAnalyticsDaily();
+
+  // 设置默认日期为今天
+  const analyticsDateInput = document.getElementById('analytics-date');
+  if (analyticsDateInput) {
+    analyticsDateInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  // 访问统计查询按钮
+  const analyticsQueryBtn = document.getElementById('analytics-query-btn');
+  if (analyticsQueryBtn) {
+    analyticsQueryBtn.addEventListener('click', queryAnalyticsDate);
+  }
 
   // 内推管理事件
   const referralSelect = document.getElementById('referral-month-select');

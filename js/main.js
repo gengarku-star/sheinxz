@@ -393,9 +393,48 @@ async function loadActivities(container) {
   `).join('') + '</div>';
 }
 
+// ---- 访客记录 ----
+function getVisitorId() {
+  let vid = localStorage.getItem('shein_visitor_id');
+  if (!vid) {
+    vid = 'v_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+    localStorage.setItem('shein_visitor_id', vid);
+  }
+  return vid;
+}
+
+function getCurrentPageSlug() {
+  const path = window.location.pathname;
+  if (path.endsWith('referral.html')) return 'referral';
+  if (path.endsWith('news.html')) return 'news';
+  if (path.endsWith('resources.html')) return 'resources';
+  if (path.endsWith('article.html')) {
+    const slug = new URLSearchParams(window.location.search).get('slug');
+    return slug || 'article';
+  }
+  return 'home'; // index.html 或根路径
+}
+
+async function trackPageView() {
+  try {
+    const visitor_id = getVisitorId();
+    const page_slug = getCurrentPageSlug();
+    const view_date = new Date().toISOString().split('T')[0];
+
+    await supabase.from('page_views').insert({
+      page_slug, visitor_id, view_date
+    });
+    // UNIQUE(page_slug, view_date, visitor_id) 会自动去重，重复插入会静默失败
+  } catch (e) {
+    // 静默忽略埋点错误，不影响用户体验
+    console.debug('Page view tracking:', e.message);
+  }
+}
+
 // ---- 初始化 ----
 document.addEventListener('DOMContentLoaded', () => {
   highlightNav();
+  trackPageView(); // 记录访问
 
   // 首页
   if (document.getElementById('page-home')) {
