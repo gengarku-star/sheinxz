@@ -692,6 +692,30 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   text-align: center;
 }
 
+/* ---- 岗位跳转链接样式 ---- */
+.rank-name-link {
+  color: var(--text);
+  text-decoration: none;
+  transition: color var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.rank-name-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.rank-link-icon {
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.6;
+  transition: opacity var(--transition), transform var(--transition);
+}
+.rank-name-link:hover .rank-link-icon {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
+
 /* ============================================
    SHEIN动态 — 日历
    ============================================ */

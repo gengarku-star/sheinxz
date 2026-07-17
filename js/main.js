@@ -249,10 +249,15 @@ async function loadReferralBoards(month, container) {
 
   container.innerHTML = '<div class="rank-grid">' + categories.map(cat => {
     const items = data.filter(d => d.category === cat.key);
+    const isPosition = cat.key.includes('position');
     const listHtml = items.length > 0
       ? items.map((item, idx) => {
           const medal = idx < 3 ? `<span class="rank-medal">${medals[idx]}</span>` : `<span class="rank-num">${idx + 1}</span>`;
-          return `<div class="rank-item">${medal}<span class="rank-name">${escapeHtml(item.name)}</span><span class="rank-count">${item.count}</span></div>`;
+          const hasLink = isPosition && item.link_url;
+          const nameHtml = hasLink
+            ? `<a href="${escapeHtml(item.link_url)}" target="_blank" rel="noopener" class="rank-name rank-name-link">${escapeHtml(item.name)} <span class="rank-link-icon">↗</span></a>`
+            : `<span class="rank-name">${escapeHtml(item.name)}</span>`;
+          return `<div class="rank-item">${medal}${nameHtml}<span class="rank-count">${item.count}</span></div>`;
         }).join('')
       : '<div class="rank-empty">暂无数据</div>';
     return `<div class="rank-board"><div class="rank-header">${cat.emoji} ${cat.title}</div>${listHtml}</div>`;

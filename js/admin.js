@@ -518,19 +518,22 @@ async function loadReferralEditor(month) {
 
   editor.innerHTML = REFERRAL_CATEGORIES.map(cat => {
     const items = data.filter(d => d.category === cat.key);
+    const isPosition = cat.key.includes('position');
+    const linkTh = isPosition ? '<th style="width:200px">跳转链接</th>' : '';
     return `
       <div class="card" style="margin-bottom:16px;">
         <h4 style="margin:0 0 12px;font-size:15px;">${cat.emoji} ${cat.title}</h4>
         <table class="admin-table referral-table">
           <thead>
-            <tr><th style="width:50px">#</th><th>${cat.key.includes('position') ? '岗位名称' : '姓名'}</th><th style="width:100px">数量</th><th style="width:60px">操作</th></tr>
+            <tr><th style="width:50px">#</th><th>${isPosition ? '岗位名称' : '姓名'}</th><th style="width:100px">数量</th>${linkTh}<th style="width:60px">操作</th></tr>
           </thead>
           <tbody>
             ${items.map((item, idx) => `
               <tr data-id="${item.id}">
                 <td>${idx + 1}</td>
-                <td><input type="text" class="form-input rank-name-input" value="${escapeHtml(item.name)}" placeholder="${cat.key.includes('position') ? '岗位名称' : '姓名'}" /></td>
+                <td><input type="text" class="form-input rank-name-input" value="${escapeHtml(item.name)}" placeholder="${isPosition ? '岗位名称' : '姓名'}" /></td>
                 <td><input type="number" class="form-input rank-count-input" value="${item.count}" min="0" /></td>
+                ${isPosition ? `<td><input type="url" class="form-input rank-link-input" value="${escapeHtml(item.link_url || '')}" placeholder="https://..." /></td>` : ''}
                 <td><button class="btn btn-danger btn-sm" onclick="deleteReferralRow('${item.id}','${month}')">删除</button></td>
               </tr>
             `).join('')}
@@ -577,6 +580,7 @@ async function deleteReferralRow(id, month) {
 }
 
 async function saveReferralCategory(month, category) {
+  const isPosition = category.includes('position');
   const rows = document.querySelectorAll(`[data-id]`);
   const updates = [];
 
@@ -584,7 +588,12 @@ async function saveReferralCategory(month, category) {
     const id = row.dataset.id;
     const name = row.querySelector('.rank-name-input').value.trim();
     const count = parseInt(row.querySelector('.rank-count-input').value) || 0;
-    updates.push({ id, name, count });
+    const update = { id, name, count };
+    if (isPosition) {
+      const linkInput = row.querySelector('.rank-link-input');
+      update.link_url = linkInput ? linkInput.value.trim() : '';
+    }
+    updates.push(update);
   });
 
   // Filter only rows for this category (we need to check by querying)
@@ -598,9 +607,11 @@ async function saveReferralCategory(month, category) {
   const categoryUpdates = updates.filter(u => categoryIds.has(u.id));
 
   for (const u of categoryUpdates) {
+    const updateData = { name: u.name, count: u.count };
+    if (isPosition) updateData.link_url = u.link_url || '';
     const { error } = await supabase
       .from('referral_rankings')
-      .update({ name: u.name, count: u.count })
+      .update(updateData)
       .eq('id', u.id);
 
     if (error) {

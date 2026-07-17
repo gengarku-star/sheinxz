@@ -426,3 +426,10 @@ ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "pageviews_public_insert" ON page_views FOR INSERT WITH CHECK (true);
 CREATE POLICY "pageviews_auth_read" ON page_views FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "pageviews_auth_delete" ON page_views FOR DELETE USING (auth.role() = 'authenticated');
+
+-- ============================================
+-- v5: 内推排行榜 — 岗位跳转链接
+-- ============================================
+
+-- 21. referral_rankings 增加链接字段（适用于岗位类别，点击可跳转到招聘页面）
+ALTER TABLE referral_rankings ADD COLUMN IF NOT EXISTS link_url TEXT DEFAULT '';
