@@ -1,0 +1,733 @@
+/* ============================================
+   SHEIN 校园大使 — 视觉效果升级层
+   科技时尚元素 · 粒子 · 光效 · 微交互
+   依赖：style.css 已加载
+   ============================================ */
+
+/* ---- CSS 变量扩展 ---- */
+:root {
+  --glow-accent: rgba(255, 45, 85, 0.4);
+  --glow-accent-strong: rgba(255, 45, 85, 0.7);
+  --glass-bg: rgba(0, 0, 0, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 20px;
+  --anim-duration: 0.6s;
+  --anim-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --reveal-distance: 40px;
+  --shimmer-color: rgba(0, 0, 0, 0.06);
+}
+
+/* ---- 页面加载淡入 ---- */
+body {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+body.loaded {
+  opacity: 1;
+}
+
+/* ============================================
+   滚动进度条
+   ============================================ */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  z-index: 1000;
+  width: 0%;
+  background: linear-gradient(90deg, #000000, #333333, #ff2d55);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
+/* ============================================
+   粒子 Canvas 背景
+   ============================================ */
+#particle-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+}
+
+/* ============================================
+   玻璃拟态导航栏
+   ============================================ */
+.navbar {
+  transition: background 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease;
+}
+.navbar.glass {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: 0 1px 0 var(--glass-border), 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   滚动揭示动画
+   ============================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(var(--reveal-distance));
+  transition: opacity var(--anim-duration) var(--anim-ease),
+              transform var(--anim-duration) var(--anim-ease);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity var(--anim-duration) var(--anim-ease),
+              transform var(--anim-duration) var(--anim-ease);
+}
+.reveal-left.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity var(--anim-duration) var(--anim-ease),
+              transform var(--anim-duration) var(--anim-ease);
+}
+.reveal-right.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity var(--anim-duration) var(--anim-ease),
+              transform var(--anim-duration) var(--anim-ease);
+}
+.reveal-scale.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger delays */
+.reveal-delay-1 { transition-delay: 0.05s; }
+.reveal-delay-2 { transition-delay: 0.1s; }
+.reveal-delay-3 { transition-delay: 0.15s; }
+.reveal-delay-4 { transition-delay: 0.2s; }
+.reveal-delay-5 { transition-delay: 0.25s; }
+.reveal-delay-6 { transition-delay: 0.3s; }
+
+/* ============================================
+   骨架屏加载
+   ============================================ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e8e8e8 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+  color: transparent !important;
+  user-select: none;
+  pointer-events: none;
+}
+.skeleton * {
+  visibility: hidden;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+  height: 16px;
+  margin-bottom: 10px;
+  width: 80%;
+}
+.skeleton-text:last-child { width: 50%; }
+
+.skeleton-heading {
+  height: 28px;
+  margin-bottom: 16px;
+  width: 40%;
+  border-radius: 6px;
+}
+
+.skeleton-card {
+  height: 160px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.skeleton-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+/* 骨架屏组合布局 */
+.skeleton-message {
+  padding: 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.skeleton-message .skeleton-text:nth-child(1) { width: 30%; height: 14px; }
+.skeleton-message .skeleton-text:nth-child(2) { width: 90%; height: 14px; }
+.skeleton-message .skeleton-text:nth-child(3) { width: 70%; height: 14px; }
+
+/* ============================================
+   按钮波纹效果
+   ============================================ */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple-anim 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple-anim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   卡片光晕与倾斜效果
+   ============================================ */
+.glow-card {
+  transition: transform 0.3s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+  will-change: transform;
+  perspective: 1000px;
+}
+.glow-card:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 45, 85, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 60px rgba(255, 45, 85, 0.06);
+  border-color: rgba(255, 45, 85, 0.25);
+}
+
+/* 卡片倾斜容器 */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+}
+.tilt-card:hover {
+  transition: transform 0.3s ease-out;
+}
+
+/* ============================================
+   渐变文字
+   ============================================ */
+.gradient-text {
+  background: linear-gradient(135deg, #000000 0%, #333333 40%, #ff2d55 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-text-light {
+  background: linear-gradient(135deg, #ffffff 0%, #cccccc 50%, #ff6b8a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-text-accent {
+  background: linear-gradient(135deg, #ff2d55 0%, #ff6b8a 50%, #ff2d55 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-shift 3s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 200% center; }
+}
+
+/* ============================================
+   Hero 区域增强
+   ============================================ */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hero 光晕背景 */
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 45, 85, 0.06) 0%,
+    rgba(255, 45, 85, 0.03) 30%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: hero-glow-pulse 6s ease-in-out infinite;
+}
+
+@keyframes hero-glow-pulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.15);
+    opacity: 1;
+  }
+}
+
+.hero-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero Badge 脉冲 */
+.hero-badge {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 45, 85, 0);
+  }
+}
+
+/* Hero 标题增强 */
+.hero-title {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #ff2d55 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hero 几何装饰 */
+.hero-geo-decor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.06;
+}
+
+.hero-geo-1 {
+  top: 10%;
+  right: 8%;
+  width: 80px;
+  height: 80px;
+  border: 2px solid #000;
+  border-radius: 20px;
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.hero-geo-2 {
+  bottom: 15%;
+  left: 6%;
+  width: 50px;
+  height: 50px;
+  border: 2px solid #ff2d55;
+  border-radius: 50%;
+  animation: float-slow 10s ease-in-out infinite reverse;
+}
+
+.hero-geo-3 {
+  top: 25%;
+  left: 10%;
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 35px solid #000;
+  animation: float-slow 12s ease-in-out infinite 2s;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-15px) rotate(5deg); }
+  66% { transform: translateY(8px) rotate(-3deg); }
+}
+
+/* ============================================
+   浮动装饰元素（全局）
+   ============================================ */
+.floating-decor {
+  position: fixed;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.03;
+}
+
+.floating-ring {
+  width: 120px;
+  height: 120px;
+  border: 3px solid #000;
+  border-radius: 50%;
+  top: 15%;
+  right: -30px;
+  animation: float-drift 15s ease-in-out infinite;
+}
+
+.floating-dot-grid {
+  top: 60%;
+  left: -20px;
+  display: grid;
+  grid-template-columns: repeat(3, 6px);
+  grid-template-rows: repeat(3, 6px);
+  gap: 10px;
+  animation: float-drift 18s ease-in-out infinite reverse;
+}
+.floating-dot-grid span {
+  width: 6px;
+  height: 6px;
+  background: #ff2d55;
+  border-radius: 50%;
+  display: block;
+}
+
+@keyframes float-drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(15px, -20px); }
+  50% { transform: translate(-10px, 10px); }
+  75% { transform: translate(20px, 5px); }
+}
+
+/* ============================================
+   增强悬停状态
+   ============================================ */
+
+/* 链接下划线动画 */
+a.underline-hover {
+  position: relative;
+  text-decoration: none;
+}
+a.underline-hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--accent, #ff2d55);
+  transition: width 0.3s var(--anim-ease);
+}
+a.underline-hover:hover::after {
+  width: 100%;
+}
+
+/* 卡片悬停提升 */
+.card-lift {
+  transition: transform 0.3s var(--anim-ease), box-shadow 0.3s var(--anim-ease);
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   统计卡片数字跳动感
+   ============================================ */
+.stats-card .stats-number {
+  background: linear-gradient(135deg, #000000, #333333, #ff2d55);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   Toast 增强
+   ============================================ */
+.toast {
+  background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   表单焦点增强
+   ============================================ */
+.form-input:focus,
+.form-textarea:focus {
+  box-shadow:
+    0 0 0 3px rgba(255, 45, 85, 0.1),
+    0 0 20px rgba(255, 45, 85, 0.05);
+  border-color: var(--accent, #ff2d55);
+}
+
+/* ============================================
+   月份按钮增强
+   ============================================ */
+.month-btn {
+  position: relative;
+  overflow: hidden;
+}
+.month-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255, 45, 85, 0.08));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.month-btn:hover::after {
+  opacity: 1;
+}
+
+/* ============================================
+   导航链接增强
+   ============================================ */
+.navbar-links a {
+  position: relative;
+  overflow: hidden;
+}
+.navbar-links a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 60%;
+  height: 2px;
+  background: var(--accent, #ff2d55);
+  border-radius: 1px;
+  transition: transform 0.3s var(--anim-ease);
+}
+.navbar-links a:hover::before {
+  transform: translateX(-50%) scaleX(1);
+}
+.navbar-links a.active::before {
+  transform: translateX(-50%) scaleX(1);
+  background: #fff;
+}
+
+/* ============================================
+   活动卡片图片增强
+   ============================================ */
+.activity-card {
+  position: relative;
+}
+.activity-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    transparent 60%,
+    rgba(255, 45, 85, 0.03) 100%
+  );
+  pointer-events: none;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+.activity-card:hover::after {
+  opacity: 1;
+}
+
+/* ============================================
+   分割线增强
+   ============================================ */
+.section-divider {
+  position: relative;
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border, #e5e5e5) 20%,
+    rgba(255, 45, 85, 0.15) 50%,
+    var(--border, #e5e5e5) 80%,
+    transparent 100%
+  );
+}
+
+/* ============================================
+   排行榜增强
+   ============================================ */
+.rank-board {
+  position: relative;
+  overflow: hidden;
+}
+.rank-board::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #000, #ff2d55);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--anim-ease);
+}
+.rank-board:hover::before {
+  transform: scaleX(1);
+}
+
+/* 排名奖牌光泽 */
+.rank-medal {
+  display: inline-block;
+  animation: medal-shine 3s ease-in-out infinite;
+}
+@keyframes medal-shine {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+/* ============================================
+   页脚增强
+   ============================================ */
+.footer {
+  position: relative;
+  background: linear-gradient(180deg, #fafafa, #ffffff);
+}
+.footer::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 45, 85, 0.2), transparent);
+}
+
+/* ============================================
+   页面内容区淡入
+   ============================================ */
+.container {
+  animation: content-fade-in 0.6s var(--anim-ease) both;
+}
+@keyframes content-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   减少动画偏好
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale {
+    opacity: 1;
+    transform: none;
+  }
+  #particle-canvas {
+    display: none;
+  }
+  .hero-geo-decor,
+  .floating-decor {
+    display: none;
+  }
+}
+
+/* ============================================
+   响应式适配
+   ============================================ */
+@media (max-width: 768px) {
+  /* 浮动装饰隐藏 */
+  .floating-decor {
+    display: none;
+  }
+
+  /* Hero 光晕缩小 */
+  .hero-section::before {
+    width: 350px;
+    height: 350px;
+  }
+
+  /* Hero 几何装饰隐藏 */
+  .hero-geo-decor {
+    display: none;
+  }
+
+  /* 降低粒子透明度 */
+  #particle-canvas {
+    opacity: 0.4;
+  }
+
+  /* 简化揭示距离 */
+  :root {
+    --reveal-distance: 20px;
+  }
+
+  /* 禁用倾斜效果（触屏） */
+  .tilt-card {
+    transform: none !important;
+  }
+
+  /* 简化骨架屏 */
+  .skeleton-card {
+    height: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 24px 12px 32px;
+  }
+
+  .hero-title {
+    font-size: 28px !important;
+  }
+
+  #particle-canvas {
+    opacity: 0.3;
+  }
+
+  .scroll-progress {
+    height: 2px;
+  }
+}

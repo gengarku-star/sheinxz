@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=8" />
+  <link rel="stylesheet" href="css/effects.css?v=1" />
 </head>
 <body>
   <nav class="navbar">
@@ -27,14 +28,14 @@
   </nav>
 
   <main class="container" id="page-referral">
-    <h1 class="page-title">内推进度</h1>
-    <p class="page-subtitle">校园大使内推数据排行榜</p>
+    <h1 class="page-title reveal">内推进度</h1>
+    <p class="page-subtitle reveal reveal-delay-1">校园大使内推数据排行榜</p>
 
-    <div id="referral-months" class="month-selector">
+    <div id="referral-months" class="month-selector reveal reveal-delay-2">
       <div class="loading">加载月份…</div>
     </div>
 
-    <div id="referral-boards">
+    <div id="referral-boards" class="reveal reveal-delay-3">
       <div class="loading">加载排行榜…</div>
     </div>
   </main>
@@ -46,5 +47,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/main.js?v=8"></script>
+  <script src="js/effects.js?v=1"></script>
 </body>
 </html>
