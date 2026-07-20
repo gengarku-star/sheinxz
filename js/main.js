@@ -344,7 +344,7 @@ async function loadCalendar(container, year, month) {
     const hasEvent = dayEvents && dayEvents.length > 0;
     const today = now.getFullYear() === year && now.getMonth() === month && now.getDate() === d;
 
-    html += `<div class="calendar-day${hasEvent ? ' has-event' : ''}${today ? ' today' : ''}" ${hasEvent ? `onclick="showEventPopup(this, ${JSON.stringify(dayEvents.map(e => ({title: e.title, description: e.description, link_url: e.link_url || ''}))).replace(/"/g, '&quot;')})"` : ''}>
+    html += `<div class="calendar-day${hasEvent ? ' has-event' : ''}${today ? ' today' : ''}" ${hasEvent ? `onmouseenter="showEventPopup(this, ${JSON.stringify(dayEvents.map(e => ({title: e.title, description: e.description, link_url: e.link_url || ''}))).replace(/"/g, '&quot;')})" onmouseleave="hideEventPopup(this)"` : ''}>
       <span class="day-num">${d}</span>
       ${hasEvent ? '<span class="event-dot"></span>' : ''}
     </div>`;
@@ -369,16 +369,11 @@ function showEventPopup(el, events) {
 
   el.style.position = 'relative';
   el.appendChild(popup);
+}
 
-  // 点击外部关闭
-  setTimeout(() => {
-    document.addEventListener('click', function closePopup(ev) {
-      if (!popup.contains(ev.target) && ev.target !== el) {
-        popup.remove();
-        document.removeEventListener('click', closePopup);
-      }
-    });
-  }, 10);
+function hideEventPopup(el) {
+  const popup = el.querySelector('.event-popup');
+  if (popup) popup.remove();
 }
 
 async function loadActivities(container) {
